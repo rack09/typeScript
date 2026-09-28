@@ -1,118 +1,207 @@
-// interfaccia partecipante
+// =========================
+//     TIPI E INTERFACCE
+// =========================
 
 interface IPartecipante {
-    nome: string;
-    cognome: string;
-    paeseOrigine: string;
-    livelloIstruzione: string;
-    competenzeLinguistiche: string[];
-    ambitoFormazioneInteresse: string;
+    readonly nome: string;
+    readonly cognome: string;
+    readonly paeseOrigine: string;
+    readonly livelloIstruzione: string;
+    readonly competenzeLinguistiche: readonly string[];
+    readonly ambitoFormazioneInteresse: string;
 
-    iscrivitiCorso(corso: ICorso): void;    
+    iscrivitiCorso(corso: ICorso): boolean;
 }
-
-// interfaccia corso
 
 interface ICorso {
-    titoloCorso: string;
-    descrizione: string;
-    settoreProfessionale: string;
-    durata: number;
-    elencoIscritti: IPartecipante[];
+    readonly titoloCorso: string;
+    readonly descrizione: string;
+    readonly settoreProfessionale: string;
+    readonly durata: number;
+    readonly elencoIscritti: readonly IPartecipante[];
 
-    aggiungiPartecipante(partecipante: IPartecipante): void;
+    aggiungiPartecipante(partecipante: IPartecipante): boolean;
 }
 
-// Interfaccia azienda
+type OffertaLavoro = {
+    readonly partecipante: IPartecipante;
+    readonly posizione: string;
+};
 
 interface IAzienda {
+    readonly nomeAzienda: string;
+    readonly settoreAttivita: string;
+    readonly descrizione: string;
+    readonly posizioniAperte: readonly string[];
+    readonly offerteEffettuate: readonly OffertaLavoro[];
 
-    nomeAzienda: string;
-    settoreAttivita: string;
-    descrizione: string;
-    posizioniAperte: string[];
-
-    offriPosizione(partecipante: IPartecipante, posizione: string): void;
+    offriPosizione(partecipante: IPartecipante, posizione: string): boolean;
 }
 
-// class Partecipante
+// =========================
+//          CLASSI
+// =========================
 
-class Partecipante implements IPartecipante{
+class Partecipante implements IPartecipante {
     constructor(
-        public nome: string,
-        public cognome: string,
-        public paeseOrigine: string,
-        public livelloIstruzione: string,
-        public competenzeLinguistiche: string[],
-        public ambitoFormazioneInteresse: string
-    ){}
+        public readonly nome: string,
+        public readonly cognome: string,
+        public readonly paeseOrigine: string,
+        public readonly livelloIstruzione: string,
+        public readonly competenzeLinguistiche: readonly string[],
+        public readonly ambitoFormazioneInteresse: string
+    ) {}
 
-    iscrivitiCorso(corso: ICorso): void{
-        corso.aggiungiPartecipante(this);
-        }
+    iscrivitiCorso(corso: ICorso): boolean {
+        return corso.aggiungiPartecipante(this);
     }
-
-
-// classe corso
-
-class Corso implements ICorso{
-    public elencoIscritti: IPartecipante[] = [];
-
-    constructor(
-        public titoloCorso: string,
-        public descrizione: string,
-        public settoreProfessionale: string,
-        public durata: number,
-        
-    ){}
-
-    aggiungiPartecipante(partecipante: IPartecipante): void{
-        const giaIscritto = this.elencoIscritti.indexOf(partecipante) !== -1;
-
-        if(giaIscritto){
-            console.log(partecipante.nome+" "+partecipante.cognome+
-                "è già iscritto al corso "+this.titoloCorso);
-                
-            return;
-        }
-
-        this.elencoIscritti.push(partecipante);
-
-        console.log("Iscrizione di "+partecipante.nome+" "+partecipante.cognome+
-            "al corso "+this.titoloCorso+" completata.");
-    }
-
 }
 
-// classe azienda
+class Corso implements ICorso {
+    private readonly iscritti: IPartecipante[] = [];
 
-class Azienda implements IAzienda{
     constructor(
-        public nomeAzienda: string,
-        public settoreAttivita: string,
-        public descrizione: string,
-        public posizioniAperte: string[]
-    ){}
+        public readonly titoloCorso: string,
+        public readonly descrizione: string,
+        public readonly settoreProfessionale: string,
+        public readonly durata: number
+    ) {}
 
-    offriPosizione(partecipante: IPartecipante, posizione: string): void{
-        const posizioneDisponibile = this.posizioniAperte.indexOf(posizione) !== -1;
+    get elencoIscritti(): readonly IPartecipante[] {
+        return [...this.iscritti];
+    }
 
-        if (!posizioneDisponibile){
-            console.log("La posizione "+posizione+" non è disponibile presso "+
-                this.nomeAzienda);
-                return;
+    aggiungiPartecipante(partecipante: IPartecipante): boolean {
+        const giaIscritto = this.iscritti.includes(partecipante);
+
+        if (giaIscritto) {
+            return false;
         }
 
-        console.log(this.nomeAzienda+" offre la posizione di "+posizione+" a "+
-            partecipante.nome+" "+partecipante.cognome
+        this.iscritti.push(partecipante);
+        return true;
+    }
+}
+
+class Azienda implements IAzienda {
+    private readonly posizioni: string[];
+    private readonly offerte: OffertaLavoro[] = [];
+
+    constructor(
+        public readonly nomeAzienda: string,
+        public readonly settoreAttivita: string,
+        public readonly descrizione: string,
+        posizioniAperte: readonly string[]
+    ) {
+        this.posizioni = [...posizioniAperte];
+    }
+
+    get posizioniAperte(): readonly string[] {
+        return [...this.posizioni];
+    }
+
+    get offerteEffettuate(): readonly OffertaLavoro[] {
+        return this.offerte.map((offerta) => ({ ...offerta }));
+    }
+
+    offriPosizione(partecipante: IPartecipante, posizione: string): boolean {
+        const posizioneDisponibile = this.posizioni.includes(posizione);
+        const offertaGiaEffettuata = this.offerte.some(
+            (offerta) =>
+                offerta.partecipante === partecipante &&
+                offerta.posizione === posizione
+        );
+
+        if (!posizioneDisponibile || offertaGiaEffettuata) {
+            return false;
+        }
+
+        this.offerte.push({ partecipante, posizione });
+
+        // Una semplice offerta non chiude la posizione:
+        // potrà essere proposta anche ad altri partecipanti.
+        return true;
+    }
+}
+
+// =========================
+// FUNZIONI DI PRESENTAZIONE
+// =========================
+
+function nomeCompleto(partecipante: IPartecipante): string {
+    return `${partecipante.nome} ${partecipante.cognome}`;
+}
+
+function gestisciIscrizione(
+    partecipante: IPartecipante,
+    corso: ICorso
+): void {
+    const iscrizioneCompletata = partecipante.iscrivitiCorso(corso);
+
+    if (iscrizioneCompletata) {
+        console.log(
+            `Iscrizione di ${nomeCompleto(partecipante)} al corso ${corso.titoloCorso} completata.`
+        );
+        return;
+    }
+
+    console.log(
+        `${nomeCompleto(partecipante)} è già iscritto al corso ${corso.titoloCorso}.`
+    );
+}
+
+function gestisciOfferta(
+    azienda: IAzienda,
+    partecipante: IPartecipante,
+    posizione: string
+): void {
+    const posizioneDisponibile = azienda.posizioniAperte.includes(posizione);
+    const offertaGiaEffettuata = azienda.offerteEffettuate.some(
+        (offerta) =>
+            offerta.partecipante === partecipante &&
+            offerta.posizione === posizione
+    );
+    const offertaRegistrata = azienda.offriPosizione(partecipante, posizione);
+
+    if (offertaRegistrata) {
+        console.log(
+            `${azienda.nomeAzienda} offre la posizione di ${posizione} a ${nomeCompleto(partecipante)}.`
+        );
+        return;
+    }
+
+    if (!posizioneDisponibile) {
+        console.log(
+            `La posizione ${posizione} non è disponibile presso ${azienda.nomeAzienda}.`
+        );
+        return;
+    }
+
+    if (offertaGiaEffettuata) {
+        console.log(
+            `${azienda.nomeAzienda} ha già offerto la posizione di ${posizione} a ${nomeCompleto(partecipante)}.`
         );
     }
 }
 
+function stampaIscritti(corso: ICorso): void {
+    const iscritti = corso.elencoIscritti.map(nomeCompleto);
 
+    console.log(`\n--- ISCRITTI: ${corso.titoloCorso.toUpperCase()} ---`);
+    console.log(iscritti.length > 0 ? iscritti : ["Nessun partecipante iscritto"]);
+}
+
+function stampaOfferte(azienda: IAzienda): void {
+    const offerte = azienda.offerteEffettuate.map(
+        (offerta) => `${offerta.posizione} → ${nomeCompleto(offerta.partecipante)}`
+    );
+
+    console.log(`\n--- OFFERTE: ${azienda.nomeAzienda.toUpperCase()} ---`);
+    console.log(offerte.length > 0 ? offerte : ["Nessuna offerta effettuata"]);
+}
 
 // =========================
-// CREAZIONE PARTECIPANTI
+//      DATI DI ESEMPIO
 // =========================
 
 const partecipante1 = new Partecipante(
@@ -142,11 +231,6 @@ const partecipante3 = new Partecipante(
     "Ristorazione"
 );
 
-
-// =========================
-// CREAZIONE CORSI
-// =========================
-
 const corsoFalegnameria = new Corso(
     "Corso di falegnameria",
     "Tecniche fondamentali per lavorare il legno",
@@ -168,92 +252,62 @@ const corsoRistorazione = new Corso(
     150
 );
 
-
-// =========================
-// ISCRIZIONE AI CORSI
-// =========================
-
-partecipante1.iscrivitiCorso(corsoFalegnameria);
-partecipante2.iscrivitiCorso(corsoSartoria);
-partecipante3.iscrivitiCorso(corsoRistorazione);
-
-// Proviamo a iscrivere nuovamente lo stesso partecipante
-partecipante1.iscrivitiCorso(corsoFalegnameria);
-
-
-// =========================
-// CREAZIONE AZIENDE
-// =========================
-
 const aziendaLegnoVivo = new Azienda(
     "Legno Vivo",
     "Falegnameria",
     "Bottega specializzata nella lavorazione artigianale del legno",
-    [
-        "Apprendista falegname",
-        "Addetto alla lavorazione del legno"
-    ]
+    ["Apprendista falegname", "Addetto alla lavorazione del legno"]
 );
 
 const aziendaStileArtigiano = new Azienda(
     "Stile Artigiano",
     "Sartoria",
     "Laboratorio specializzato nella produzione di abiti artigianali",
-    [
-        "Apprendista di sartoria",
-        "Addetto al confezionamento"
-    ]
+    ["Apprendista di sartoria", "Addetto al confezionamento"]
 );
 
-
 // =========================
-// OFFERTE DI LAVORO
+// ESECUZIONE DEL PROGRAMMA
 // =========================
 
-aziendaLegnoVivo.offriPosizione(
+gestisciIscrizione(partecipante1, corsoFalegnameria);
+gestisciIscrizione(partecipante2, corsoSartoria);
+gestisciIscrizione(partecipante3, corsoRistorazione);
+
+// Verifica del controllo sulle iscrizioni duplicate.
+gestisciIscrizione(partecipante1, corsoFalegnameria);
+
+gestisciOfferta(
+    aziendaLegnoVivo,
     partecipante1,
     "Apprendista falegname"
 );
-
-aziendaStileArtigiano.offriPosizione(
+gestisciOfferta(
+    aziendaStileArtigiano,
     partecipante2,
     "Apprendista di sartoria"
 );
 
-// Testiamo una posizione non disponibile
-aziendaLegnoVivo.offriPosizione(
-    partecipante3,
-    "Cuoco"
+// Verifica di una posizione non disponibile.
+gestisciOfferta(aziendaLegnoVivo, partecipante3, "Cuoco");
+
+// Verifica del controllo sulle offerte duplicate.
+gestisciOfferta(
+    aziendaLegnoVivo,
+    partecipante1,
+    "Apprendista falegname"
 );
 
+const corsi: readonly ICorso[] = [
+    corsoFalegnameria,
+    corsoSartoria,
+    corsoRistorazione
+];
 
-// =========================
-// RIEPILOGO FINALE
-// =========================
+const aziende: readonly IAzienda[] = [
+    aziendaLegnoVivo,
+    aziendaStileArtigiano
+];
 
-console.log("\n--- ISCRITTI AL CORSO DI FALEGNAMERIA ---");
-
-console.log(
-    corsoFalegnameria.elencoIscritti.map(
-        partecipante =>
-            `${partecipante.nome} ${partecipante.cognome}`
-    )
-);
-
-console.log("\n--- ISCRITTI AL CORSO DI SARTORIA ---");
-
-console.log(
-    corsoSartoria.elencoIscritti.map(
-        partecipante =>
-            `${partecipante.nome} ${partecipante.cognome}`
-    )
-);
-
-console.log("\n--- ISCRITTI AL CORSO DI RISTORAZIONE ---");
-
-console.log(
-    corsoRistorazione.elencoIscritti.map(
-        partecipante =>
-            `${partecipante.nome} ${partecipante.cognome}`
-    )
-);
+corsi.forEach(stampaIscritti);
+aziende.forEach(stampaOfferte);
