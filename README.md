@@ -1,0 +1,117 @@
+# 🌍 IncluDO – Progetto TypeScript
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![OOP](https://img.shields.io/badge/OOP-Classi%20e%20interfacce-6C63FF?style=flat)](https://www.typescriptlang.org/docs/handbook/2/classes.html)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=flat&logo=github&logoColor=white)](https://github.com/rack09/typeScript)
+
+**IncluDO** è un progetto TypeScript dedicato alla formazione professionale e all'inclusione lavorativa dei migranti.
+
+Il programma mette in relazione partecipanti, corsi di formazione e aziende partner, gestendo le iscrizioni e le offerte di lavoro attraverso interfacce e classi.
+
+## 🚀 Funzionalità principali
+
+- 👤 Creazione di partecipanti con dati personali, istruzione e competenze linguistiche.
+- 🎓 Iscrizione dei partecipanti ai corsi di formazione.
+- 🚫 Controllo delle iscrizioni duplicate.
+- 🔒 Elenco degli iscritti protetto e accessibile in sola lettura.
+- 🏢 Creazione di aziende con posizioni lavorative aperte.
+- 💼 Registrazione delle offerte di lavoro effettuate.
+- 🚫 Controllo delle offerte duplicate e delle posizioni non disponibili.
+- 🧭 Esito distinto per un'offerta registrata, una posizione assente o un'offerta già effettuata.
+- 📊 Riepilogo in console degli iscritti e delle offerte registrate.
+
+## 🧱 Struttura OOP
+
+| Componente | Responsabilità |
+| --- | --- |
+| `IPartecipante` | Definisce i dati e il comportamento di un partecipante. |
+| `Partecipante` | Conserva i dati personali e richiede l'iscrizione a un corso. |
+| `ICorso` | Definisce le proprietà e le operazioni di un corso. |
+| `Corso` | Protegge l'elenco degli iscritti e impedisce i duplicati. |
+| `IAzienda` | Definisce i dati e le operazioni di un'azienda partner. |
+| `Azienda` | Controlla le posizioni e registra le offerte effettuate. |
+| `OffertaLavoro` | Descrive il partecipante e la posizione di ogni offerta. |
+| `EsitoOfferta` | Descrive il risultato di `offriPosizione()` con tre valori possibili. |
+
+## 🛡️ Scelte progettuali
+
+Le classi gestiscono esclusivamente i dati e la logica del dominio:
+
+- `aggiungiPartecipante()` restituisce `true` o `false` e non stampa messaggi;
+- `offriPosizione()` restituisce `"registrata"`, `"non_disponibile"` o `"gia_effettuata"` e registra solo le offerte valide;
+- gli array interni sono `private` e vengono esposti come collezioni `readonly`;
+- i messaggi destinati all'utente vengono stampati da funzioni esterne alle classi;
+- `gestisciOfferta()` chiama una sola volta `offriPosizione()` e sceglie il messaggio in base all'esito, senza ripetere i controlli dell'azienda;
+- le posizioni restano aperte dopo una semplice offerta, ma la stessa posizione non può essere offerta due volte allo stesso partecipante.
+
+Questa separazione permette di riutilizzare le classi anche in una futura interfaccia web senza modificarne la logica. Le dipendenze sono visibili negli `import` di ciascun modulo; `models/` non importa da `presentation/`.
+
+## 🗂️ Struttura del progetto
+
+```text
+Progetto-TypeScript/
+├── src/
+│   ├── types/          # Interfacce e tipi del dominio
+│   ├── models/         # Partecipante, Corso e Azienda (una classe per file)
+│   ├── presentation/   # Messaggi destinati all'utente
+│   ├── data/           # Partecipanti, corsi e aziende di esempio
+│   └── index.ts        # Punto d'ingresso del programma
+├── tests/              # Verifiche dei risultati di offriPosizione
+├── package.json        # Script e dipendenze del progetto
+├── package-lock.json   # Versioni esatte delle dipendenze
+├── tsconfig.json       # Configurazione del compilatore
+├── .gitignore          # Esclude node_modules/ e dist/
+└── README.md           # Documentazione
+```
+
+La cartella `src/` contiene il codice scritto a mano. `dist/` viene generata durante la compilazione; `dist/` e `node_modules/` sono escluse da Git grazie a `.gitignore`.
+
+## 💻 Installazione ed esecuzione
+
+È necessario avere Node.js 18 o una versione successiva.
+
+```bash
+git clone https://github.com/rack09/typeScript.git
+cd typeScript
+npm ci
+npm run build
+npm start
+```
+
+Per compilare ed eseguire il progetto con un unico comando:
+
+```bash
+npm run dev
+```
+
+Per controllare i tipi senza generare JavaScript:
+
+```bash
+npm run typecheck
+```
+
+Per compilare ed eseguire i test delle tre possibili risposte dell'azienda:
+
+```bash
+npm test
+```
+
+## ⚙️ Configurazione TypeScript
+
+Il file `tsconfig.json` utilizza:
+
+- `target: ES2022`;
+- `module: CommonJS`;
+- `strict: true`;
+- `rootDir: src` e `include: ["src"]`;
+- `outDir: dist`;
+- `noEmitOnError: true`.
+
+Il JavaScript compilato può quindi essere rigenerato in modo identico da chiunque cloni il repository.
+
+## 👨‍💻 Autore
+
+**Melvin Rosales**
+
+- GitHub: [@rack09](https://github.com/rack09)
